@@ -11,5 +11,5 @@ p18 = foldr1 g where
    g xs ys = zipWith3 f xs ys $ tail ys
 
 main = do
-   input <- readFile "problem-018.txt"
+   input <- readFile "problem-067.txt"
    print $ head $ p18 $ readTri input
