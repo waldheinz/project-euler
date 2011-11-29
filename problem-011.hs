@@ -1,5 +1,7 @@
 
 import Data.Array
+import Data.List (maximumBy)
+import Data.Ord (comparing)
 
 m = 20
 len = 4
@@ -32,4 +34,7 @@ arr l = listArray ((0,0), (19,19)) $ concat l :: Array (Int, Int) Int
 
 main = do
    input <- readFile "problem-011.txt"
-   print $ maximum $ map (eval (arr $ parse input)) fc
+   let ai = arr $ parse input
+   let prods = map (eval ai) fc
+   let zp = zip prods fc
+   print $ maximumBy (comparing fst) zp
