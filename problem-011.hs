@@ -6,14 +6,14 @@ import Data.Ord (comparing)
 m = 20
 len = 4
 
-parse :: String -> [[Int]]
+parse :: String -> [[Integer]]
 parse t = map (\l -> map read $ words l) $ lines t
 
 dirs :: [(Int, Int)]
-dirs = [(1,0), (1,1), (0, 1)]
+dirs = [(1,0), (1,1), (0, 1), (-1, 1)]
 
 starts :: [(Int, Int)]
-starts = [(x, y) | x <- [0..m], y <- [0..m]]
+starts = [(x, y) | x <- [0..m-1], y <- [0..m-1]]
 
 path :: (Int, Int) -> (Int, Int) -> [(Int, Int)]
 path s d = p s d len where
@@ -24,13 +24,12 @@ coords :: [[(Int, Int)]]
 coords = concat $ map allDirs (map path starts) where
    allDirs f = map f dirs
 
-fc = filter allIn coords where
-   allIn l = all id $ map (\(x,y) -> x < m && y < m) l
+fc = filter (all (\(x,y) -> x < m && y < m && x >= 0)) coords
 
-eval :: (Array (Int, Int) Int) -> [(Int, Int)] -> Int
+eval :: (Array (Int, Int) Integer) -> [(Int, Int)] -> Integer
 eval a p = product $ map (a!) p
 
-arr l = listArray ((0,0), (19,19)) $ concat l :: Array (Int, Int) Int
+arr l = listArray ((0,0), (19,19)) $ concat l :: Array (Int, Int) Integer
 
 main = do
    input <- readFile "problem-011.txt"
