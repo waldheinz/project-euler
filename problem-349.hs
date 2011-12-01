@@ -1,6 +1,8 @@
 
 import System.Console.ANSI
 import Control.Monad (forM_)
+import Data.Function
+import Data.List
 
 data Dir = North | East | South | West deriving (Enum, Eq, Show)
 
@@ -35,29 +37,50 @@ step s
       (b1, b2) = span (/= (pos s)) (blacks s)
       isBlack = not $ null b2
 
-nblack :: State -> Int
-nblack = length . blacks
 
-nblacks :: [(Int, Int)]
-nblacks = zip [0..] $ map nblack $ iterate step initialState
+-- just for the fun of it, an ASCII - art animation
 
-drawc :: [Cell] -> String
-drawc bs
+draw :: State -> String
+draw (State _ bs _)
    | null bs = "<empty>\n"
    | otherwise = concatMap row [y0..y1]
    where
-      (x0, x1) = (minimum $ map fst bs ++ [-20], maximum $ map fst bs ++ [20])
-      (y0, y1) = (minimum $ map snd bs ++ [-20], maximum $ map snd bs ++ [20])
+      (x0, x1) = (minimum $ map fst bs ++ [-10], maximum $ map fst bs ++ [10])
+      (y0, y1) = (minimum $ map snd bs ++ [-10], maximum $ map snd bs ++ [10])
       row y = [c x y | x <- [x0..x1]] ++ "\n"
       c x y = if (x, y) `elem` bs then '#' else '.'
 
-draw :: State -> String
-draw = drawc . blacks
+animate :: IO ()
+animate = forM_ (zip [1..] (iterate step initialState)) $ \(i, s) -> do
+   setCursorPosition 0 0
+   putStrLn $ draw s
+   putStrLn $ show i
+
+-- and the real thing...
+
+nblacks :: [(Int, Int)]
+nblacks =  drop 11000 $ zip [0..] $ map (length.blacks) $ iterate step initialState
+
+flatten :: (Int, Int) -> (Int, Int)
+flatten (n, b) = (n, 3 * n - 26 * b - 11169) -- found by playing with gnuplot
 
 main :: IO ()
 main = do
-   forM_ (zip [1..] (take 20000 $ iterate step initialState)) $ \(i, s) -> do
-      setCursorPosition 0 0
-      putStrLn $ draw s
-      putStrLn $ show i
+   let
+      n = 11001 -- 10 ^ 18
+      sample = take 1000 nblacks
+      lin = map flatten sample
+      min = minimumBy (compare `on` snd) lin
+      mins = filter (\(_, b) -> b == snd min) lin
+      plen = (\((n1, _) : (n2, _) : _) -> n2 - n1) mins -- period length
+      (offset, target) = ((n  - 11000) `mod` (fromIntegral plen :: Integer),
+                          (n  - 11000) `div` (fromIntegral plen :: Integer))
+      sample' = take plen $ map (fromIntegral.snd) $ dropWhile ((/=) min) lin
       
+   print $ "minimum = " ++ show min
+   print $ "mins = " ++ show mins
+   print $ "plen = " ++ show plen
+   print $ "target, offset = (" ++ show target ++ ", "  ++ show offset ++ ")"
+   print $ sample'
+   print $ ((11169 + target) * 3 + (sample' !! fromIntegral offset)) `div` 26
+   print $ nblacks !! 1
