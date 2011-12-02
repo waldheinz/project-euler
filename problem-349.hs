@@ -58,29 +58,35 @@ animate = forM_ (zip [1..] (iterate step initialState)) $ \(i, s) -> do
 
 -- and the real thing...
 
+settle :: Int
+settle = 11081 -- chosen to start on a local minimum
+
 nblacks :: [(Int, Int)]
-nblacks =  drop 11000 $ zip [0..] $ map (length.blacks) $ iterate step initialState
+nblacks =  drop settle $ zip [0..] $ map (length.blacks) $ iterate step initialState
 
 flatten :: (Int, Int) -> (Int, Int)
-flatten (n, b) = (n, 3 * n - 26 * b - 11169) -- found by playing with gnuplot
+flatten (n, b) = (n, 3 * n - 26 * b) -- found by playing with gnuplot
 
 main :: IO ()
 main = do
    let
-      n = 11001 -- 10 ^ 18
+      n = 10 ^ 18
       sample = take 1000 nblacks
       lin = map flatten sample
       min = minimumBy (compare `on` snd) lin
       mins = filter (\(_, b) -> b == snd min) lin
       plen = (\((n1, _) : (n2, _) : _) -> n2 - n1) mins -- period length
-      (offset, target) = ((n  - 11000) `mod` (fromIntegral plen :: Integer),
-                          (n  - 11000) `div` (fromIntegral plen :: Integer))
-      sample' = take plen $ map (fromIntegral.snd) $ dropWhile ((/=) min) lin
-      
+      (offset, target) = ((n  - fromIntegral settle) `mod` (fromIntegral plen :: Integer),
+                          (n  - fromIntegral settle) `div` (fromIntegral plen :: Integer))
+      sample' = map (fromIntegral.snd) $ dropWhile ((/=) min) lin
+   
+   print $ "n = " ++ show n
    print $ "minimum = " ++ show min
    print $ "mins = " ++ show mins
    print $ "plen = " ++ show plen
    print $ "target, offset = (" ++ show target ++ ", "  ++ show offset ++ ")"
-   print $ sample'
-   print $ ((11169 + target) * 3 + (sample' !! fromIntegral offset)) `div` 26
-   print $ nblacks !! 1
+--    print $ fst $ splitAt plen $ sample'
+--    print $ snd $ splitAt plen $ sample'
+   print $ (n * 3 - (sample' !! fromIntegral offset)) `div` 26
+   print $ nblacks !! 1000
+   
