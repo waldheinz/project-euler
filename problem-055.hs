@@ -11,4 +11,4 @@ nlychrel n = any palin $ take 50 $ tail $ iterate step n
 
 main :: IO ()
 main = print $ fromIntegral n - (length $ filter nlychrel [1..n]) where
-   n = 10000
+   n = 9999
