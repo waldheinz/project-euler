@@ -22,11 +22,19 @@ cost ((x:xs):[]) = x + sum xs -- walk straight right
 cost ((x:[]):xs) = x + (sum $ map head xs) -- walk straight down
 cost b@((x:_):_) = x + min (cost $ map tail b) (cost $ tail b)
 
+go :: Int -> [Int] -> [Int] -> [Int]
+go _ _ [] = []
+go l (p:ps) (c:cs) = h : go h ps cs where
+   h = min l p + c
+
+solve :: Board -> [Int]
+solve (b:bs) = foldl (\p c -> go maxBound p c) (go 0 (repeat maxBound) b) bs
+
 parse :: String -> Board
 parse s = map (\l -> map read $ wordsWhen (==',') l) $ lines s
 
 main :: IO ()
 main = do
-   i <- readFile "matrix.txt"
+   i <- readFile "data/matrix.txt"
 
-   print $ cost $ parse i
+   print $ last $ solve $ parse i
